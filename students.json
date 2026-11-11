@@ -1,0 +1,70 @@
+[
+  {
+    "id": "S101",
+    "name": "Ayesha Khan",
+    "class": "Semester 3",
+    "marks": {
+      "Python": 88,
+      "Mathematics": 76,
+      "English": 92,
+      "Database": 81
+    },
+    "total": 337,
+    "average": 84.25,
+    "grade": "B"
+  },
+  {
+    "id": "S102",
+    "name": "Ali Raza",
+    "class": "Semester 3",
+    "marks": {
+      "Python": 55,
+      "Mathematics": 48,
+      "English": 62,
+      "Database": 70
+    },
+    "total": 235,
+    "average": 58.75,
+    "grade": "D"
+  },
+  {
+    "id": "S103",
+    "name": "Zara Ahmed",
+    "class": "Semester 1",
+    "marks": {
+      "Introduction to Computing": 91,
+      "English": 85,
+      "Mathematics": 89
+    },
+    "total": 265,
+    "average": 88.33,
+    "grade": "A"
+  },
+  {
+    "id": "S104",
+    "name": "Usman Tariq",
+    "class": "Semester 5",
+    "marks": {
+      "Software Engineering": 65,
+      "Operating Systems": 72,
+      "Computer Networks": 60,
+      "AI Fundamentals": 78
+    },
+    "total": 275,
+    "average": 68.75,
+    "grade": "C"
+  },
+  {
+    "id": "S105",
+    "name": "Hina Malik",
+    "class": "Semester 2",
+    "marks": {
+      "Programming Fundamentals": 40,
+      "Calculus": 35,
+      "Physics": 45
+    },
+    "total": 120,
+    "average": 40.0,
+    "grade": "F"
+  }
+]

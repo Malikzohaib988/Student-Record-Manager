@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Student Record Manager</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --dark-green : #1B5E20;
+      --green      : #2E7D32;
+      --mid-green  : #388E3C;
+      --light-green: #E8F5E9;
+      --accent     : #43A047;
+      --white      : #FFFFFF;
+      --gray-100   : #F5F5F5;
+      --gray-200   : #EEEEEE;
+      --gray-400   : #BDBDBD;
+      --gray-600   : #757575;
+      --gray-800   : #424242;
+      --red        : #C62828;
+      --red-light  : #FFEBEE;
+      --blue-light : #E3F2FD;
+      --shadow     : 0 2px 8px rgba(0,0,0,.12);
+      --radius     : 8px;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      min-height: 100vh;
+    }
+
+    /* ── Header ──────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, var(--dark-green), var(--mid-green));
+      color: var(--white);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 3px 10px rgba(0,0,0,.2);
+    }
+    header .logo { font-size: 2rem; }
+    header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: .5px; }
+    header p  { font-size: .85rem; opacity: .85; margin-top: 2px; }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .container {
+      max-width: 1300px;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      grid-template-rows: auto auto;
+      gap: 20px;
+    }
+
+    /* ── Cards ───────────────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      background: var(--green);
+      color: var(--white);
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-body { padding: 20px; }
+
+    /* ── Form ────────────────────────────────────────────────── */
+    .form-group { margin-bottom: 14px; }
+    label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--green);
+      margin-bottom: 4px;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--gray-400);
+      border-radius: 6px;
+      font-size: .9rem;
+      transition: border-color .2s;
+      outline: none;
+    }
+    input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(46,125,50,.15); }
+    .hint {
+      font-size: .75rem;
+      color: var(--gray-600);
+      margin-top: 3px;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────── */
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .btn {
+      padding: 9px 18px;
+      border: none;
+      border-radius: 6px;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .1s, opacity .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover  { opacity: .88; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary  { background: var(--green);     color: var(--white); }
+    .btn-warning  { background: #F57F17;           color: var(--white); }
+    .btn-danger   { background: var(--red);        color: var(--white); }
+    .btn-clear    { background: var(--gray-600);   color: var(--white); }
+    .btn-ai       { background: var(--dark-green); color: var(--white); flex: 1; justify-content: center; }
+    .btn-tips     { background: var(--mid-green);  color: var(--white); flex: 1; justify-content: center; }
+    .btn-search   { background: var(--accent);     color: var(--white); }
+    .btn-showall  { background: var(--gray-600);   color: var(--white); }
+
+    /* ── Alert messages ──────────────────────────────────────── */
+    .alert {
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: .88rem;
+      margin-top: 12px;
+      display: none;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .alert.show { display: flex; }
+    .alert-success { background: var(--light-green); color: var(--dark-green); border-left: 4px solid var(--green); }
+    .alert-error   { background: var(--red-light);   color: var(--red);        border-left: 4px solid var(--red);   }
+    .alert-info    { background: var(--blue-light);  color: #0D47A1;           border-left: 4px solid #1565C0;      }
+
+    /* ── Search bar ──────────────────────────────────────────── */
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-row input {
+      flex: 1;
+      min-width: 160px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--gray-400);
+      border-radius: 6px;
+      font-size: .88rem;
+      outline: none;
+    }
+    .search-row input:focus { border-color: var(--green); }
+
+    /* ── Table ───────────────────────────────────────────────── */
+    .table-wrapper { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+    thead tr { background: var(--green); color: var(--white); }
+    thead th { padding: 11px 10px; text-align: left; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--gray-200); cursor: pointer; transition: background .15s; }
+    tbody tr:hover    { background: var(--light-green); }
+    tbody tr.selected { background: #C8E6C9; }
+    tbody td { padding: 10px 10px; vertical-align: middle; }
+    .grade-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: .82rem;
+    }
+    .grade-A { background: #A5D6A7; color: #1B5E20; }
+    .grade-B { background: #C5E1A5; color: #33691E; }
+    .grade-C { background: #FFF59D; color: #F57F17; }
+    .grade-D { background: #FFCC80; color: #E65100; }
+    .grade-F { background: #EF9A9A; color: #B71C1C; }
+
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray-600);
+      font-style: italic;
+    }
+
+    /* ── AI Result section ───────────────────────────────────── */
+    .ai-section { grid-column: 1 / -1; }
+    .ai-result {
+      min-height: 120px;
+      background: var(--gray-100);
+      border-radius: 6px;
+      padding: 16px;
+      font-size: .9rem;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      color: var(--gray-800);
+      border: 1.5px solid var(--gray-200);
+    }
+    .ai-result.loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--green);
+      font-weight: 600;
+    }
+    .spinner {
+      width: 22px; height: 22px;
+      border: 3px solid var(--gray-200);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Modal (delete confirm) ──────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 8px 30px rgba(0,0,0,.2);
+      text-align: center;
+    }
+    .modal h3 { color: var(--red); margin-bottom: 10px; font-size: 1.1rem; }
+    .modal p  { color: var(--gray-600); margin-bottom: 22px; font-size: .92rem; }
+    .modal .btn-row { justify-content: center; }
+
+    /* ── Stats bar ───────────────────────────────────────────── */
+    .stats-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .stat-pill {
+      background: var(--light-green);
+      border: 1px solid #A5D6A7;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: .82rem;
+      color: var(--dark-green);
+      font-weight: 600;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 860px) {
+      .container { grid-template-columns: 1fr; }
+      .ai-section { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header>
+  <div class="logo">🎓</div>
+  <div>
+    <h1>AI Student Record Manager</h1>
+    <p>Manage student records &amp; get AI-powered academic insights</p>
+  </div>
+</header>
+
+<!-- ══════════════════ MAIN LAYOUT ══════════════════ -->
+<div class="container">
+
+  <!-- ── SECTION A: Student Information Form ── -->
+  <div class="card" id="formCard">
+    <div class="card-header">📝 Student Information</div>
+    <div class="card-body">
+
+      <div class="form-group">
+        <label for="studentId">Student ID</label>
+        <input type="text" id="studentId" placeholder="e.g. S101" />
+      </div>
+
+      <div class="form-group">
+        <label for="studentName">Student Name</label>
+        <input type="text" id="studentName" placeholder="e.g. Ayesha Khan" />
+      </div>
+
+      <div class="form-group">
+        <label for="studentClass">Class / Semester</label>
+        <input type="text" id="studentClass" placeholder="e.g. Semester 3" />
+      </div>
+
+      <div class="form-group">
+        <label for="subjects">Subjects</label>
+        <input type="text" id="subjects" placeholder="e.g. Python, Math, English" />
+        <div class="hint">Comma-separated subject names</div>
+      </div>
+
+      <div class="form-group">
+        <label for="marks">Marks</label>
+        <input type="text" id="marks" placeholder="e.g. 88, 76, 92" />
+        <div class="hint">Comma-separated marks (0–100 each)</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary"  onclick="addStudent()">➕ Add</button>
+        <button class="btn btn-warning"  onclick="updateStudent()">✏️ Update</button>
+        <button class="btn btn-danger"   onclick="confirmDelete()">🗑️ Delete</button>
+        <button class="btn btn-clear"    onclick="clearForm()">✖ Clear</button>
+      </div>
+
+      <div id="formAlert" class="alert"></div>
+    </div>
+  </div>
+
+  <!-- ── SECTION B: Student Records Table ── -->
+  <div class="card">
+    <div class="card-header">📋 Student Records</div>
+    <div class="card-body">
+
+      <div class="stats-bar" id="statsBar"></div>
+
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Search by name or ID…" onkeyup="liveSearch()" />
+        <button class="btn btn-search"  onclick="searchStudents()">🔍 Search</button>
+        <button class="btn btn-showall" onclick="showAll()">📄 Show All</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="studentsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Class</th>
+              <th>Subjects</th>
+              <th>Marks</th>
+              <th>Total</th>
+              <th>Avg %</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="9" class="no-data">Loading records…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SECTION C: AI Performance Feedback ── -->
+  <div class="card ai-section">
+    <div class="card-header">🤖 AI Performance Feedback &amp; Study Tips</div>
+    <div class="card-body">
+
+      <p style="font-size:.88rem;color:var(--gray-600);margin-bottom:14px;">
+        Select a student from the table above, then click a button below.
+      </p>
+
+      <div class="btn-row" style="margin-bottom:16px;">
+        <button class="btn btn-ai"   onclick="runAI('analyze')">🔍 Analyze Performance</button>
+        <button class="btn btn-tips" onclick="runAI('tips')">📚 Generate Study Tips</button>
+      </div>
+
+      <div id="aiAlert" class="alert"></div>
+      <div id="aiResult" class="ai-result">AI response will appear here after selecting a student and clicking a button above.</div>
+
+    </div>
+  </div>
+
+</div><!-- /.container -->
+
+<!-- ══════════════════ DELETE CONFIRM MODAL ══════════════════ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>⚠️ Confirm Delete</h3>
+    <p id="deleteMsg">Are you sure you want to delete this student?</p>
+    <div class="btn-row">
+      <button class="btn btn-danger"  onclick="doDelete()">Yes, Delete</button>
+      <button class="btn btn-clear"   onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ JAVASCRIPT ══════════════════ -->
+<script>
+  /* ── State ─────────────────────────────────────────────────── */
+  let allStudents    = [];   // full list from server
+  let selectedId     = null; // currently selected student ID
+  let pendingDeleteId = null;
+
+  /* ── Boot ──────────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', loadStudents);
+
+  /* ══════════════════════════════════════════════════════════════
+     DATA LOADING
+  ══════════════════════════════════════════════════════════════ */
+  async function loadStudents() {
+    try {
+      const res = await fetch('/api/students');
+      allStudents = await res.json();
+      renderTable(allStudents);
+      updateStats(allStudents);
+    } catch (err) {
+      showTableError('Could not load student records. Make sure the server is running.');
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     RENDER TABLE
+  ══════════════════════════════════════════════════════════════ */
+  function renderTable(students) {
+    const tbody = document.getElementById('tableBody');
+    if (!students.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="no-data">No student records found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = students.map((s, i) => {
+      const subjectNames = Object.keys(s.marks).join(', ');
+      const markValues   = Object.values(s.marks).join(', ');
+      const gradeClass   = `grade-${s.grade}`;
+      const selected     = s.id === selectedId ? 'selected' : '';
+      return `
+        <tr class="${selected}" onclick="selectStudent('${s.id}')">
+          <td>${i + 1}</td>
+          <td><strong>${s.id}</strong></td>
+          <td>${s.name}</td>
+          <td>${s.class}</td>
+          <td>${subjectNames}</td>
+          <td>${markValues}</td>
+          <td>${s.total}</td>
+          <td>${s.average}%</td>
+          <td><span class="grade-badge ${gradeClass}">${s.grade}</span></td>
+        </tr>`;
+    }).join('');
+  }
+
+  function showTableError(msg) {
+    document.getElementById('tableBody').innerHTML =
+      `<tr><td colspan="9" class="no-data" style="color:var(--red)">${msg}</td></tr>`;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     STATS BAR
+  ══════════════════════════════════════════════════════════════ */
+  function updateStats(students) {
+    const bar = document.getElementById('statsBar');
+    if (!students.length) { bar.innerHTML = ''; return; }
+    const total   = students.length;
+    const grades  = { A:0, B:0, C:0, D:0, F:0 };
+    students.forEach(s => { if (grades[s.grade] !== undefined) grades[s.grade]++; });
+    const avgAll  = (students.reduce((a,s) => a + s.average, 0) / total).toFixed(1);
+    bar.innerHTML = `
+      <span class="stat-pill">👥 Total: ${total}</span>
+      <span class="stat-pill">📊 Class Avg: ${avgAll}%</span>
+      <span class="stat-pill">🏆 A: ${grades.A}</span>
+      <span class="stat-pill">✅ B: ${grades.B}</span>
+      <span class="stat-pill">📘 C: ${grades.C}</span>
+      <span class="stat-pill">⚠️ D: ${grades.D}</span>
+      <span class="stat-pill">❌ F: ${grades.F}</span>`;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     SELECT STUDENT → POPULATE FORM
+  ══════════════════════════════════════════════════════════════ */
+  function selectStudent(id) {
+    selectedId = id;
+    const s = allStudents.find(x => x.id === id);
+    if (!s) return;
+
+    document.getElementById('studentId').value    = s.id;
+    document.getElementById('studentName').value  = s.name;
+    document.getElementById('studentClass').value = s.class;
+    document.getElementById('subjects').value     = Object.keys(s.marks).join(', ');
+    document.getElementById('marks').value        = Object.values(s.marks).join(', ');
+
+    // Highlight selected row
+    document.querySelectorAll('#tableBody tr').forEach(tr => tr.classList.remove('selected'));
+    const rows = document.querySelectorAll('#tableBody tr');
+    rows.forEach(tr => {
+      if (tr.cells[1] && tr.cells[1].textContent.trim() === id)
+        tr.classList.add('selected');
+    });
+
+    hideAlert('formAlert');
+    hideAlert('aiAlert');
+    document.getElementById('aiResult').textContent =
+      `Student "${s.name}" selected. Click Analyze Performance or Generate Study Tips.`;
+    document.getElementById('aiResult').classList.remove('loading');
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ADD STUDENT
+  ══════════════════════════════════════════════════════════════ */
+  async function addStudent() {
+    const payload = getFormPayload();
+    if (!payload) return;
+
+    try {
+      const res  = await fetch('/api/students', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) { showAlert('formAlert', 'error', data.error); return; }
+      showAlert('formAlert', 'success', `✅ ${data.message}`);
+      clearForm();
+      await loadStudents();
+    } catch (err) {
+      showAlert('formAlert', 'error', 'Server error. Please try again.');
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     UPDATE STUDENT
+  ══════════════════════════════════════════════════════════════ */
+  async function updateStudent() {
+    const id = document.getElementById('studentId').value.trim();
+    if (!id) { showAlert('formAlert', 'error', 'Please select a student from the table first.'); return; }
+
+    const payload = getFormPayload();
+    if (!payload) return;
+
+    try {
+      const res  = await fetch(`/api/students/${encodeURIComponent(id)}`, {
+        method : 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) { showAlert('formAlert', 'error', data.error); return; }
+      showAlert('formAlert', 'success', `✅ ${data.message}`);
+      selectedId = null;
+      clearForm();
+      await loadStudents();
+    } catch (err) {
+      showAlert('formAlert', 'error', 'Server error. Please try again.');
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     DELETE STUDENT
+  ══════════════════════════════════════════════════════════════ */
+  function confirmDelete() {
+    const id = document.getElementById('studentId').value.trim();
+    if (!id) { showAlert('formAlert', 'error', 'Please select a student from the table first.'); return; }
+    pendingDeleteId = id;
+    const name = document.getElementById('studentName').value.trim() || id;
+    document.getElementById('deleteMsg').textContent =
+      `Are you sure you want to delete "${name}" (${id})? This cannot be undone.`;
+    document.getElementById('deleteModal').classList.add('show');
+  }
+
+  async function doDelete() {
+    closeModal();
+    if (!pendingDeleteId) return;
+    try {
+      const res  = await fetch(`/api/students/${encodeURIComponent(pendingDeleteId)}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) { showAlert('formAlert', 'error', data.error); return; }
+      showAlert('formAlert', 'success', `✅ ${data.message}`);
+      selectedId = null;
+      pendingDeleteId = null;
+      clearForm();
+      await loadStudents();
+    } catch (err) {
+      showAlert('formAlert', 'error', 'Server error. Please try again.');
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     SEARCH
+  ══════════════════════════════════════════════════════════════ */
+  function liveSearch() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (!q) { renderTable(allStudents); updateStats(allStudents); return; }
+    filterAndRender(q);
+  }
+
+  function searchStudents() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (!q) { showAlert('formAlert', 'info', 'Please enter a name or ID to search.'); return; }
+    filterAndRender(q);
+  }
+
+  function filterAndRender(q) {
+    const filtered = allStudents.filter(s =>
+      s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q)
+    );
+    renderTable(filtered);
+    updateStats(filtered);
+  }
+
+  function showAll() {
+    document.getElementById('searchInput').value = '';
+    renderTable(allStudents);
+    updateStats(allStudents);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     AI REQUESTS
+  ══════════════════════════════════════════════════════════════ */
+  async function runAI(kind) {
+    if (!selectedId) {
+      showAlert('aiAlert', 'error', 'Please select a student from the table first.');
+      return;
+    }
+
+    const resultDiv = document.getElementById('aiResult');
+    const label = kind === 'analyze' ? 'Analyzing performance' : 'Generating study tips';
+    resultDiv.innerHTML = `<div class="spinner"></div> ${label}… please wait`;
+    resultDiv.classList.add('loading');
+    hideAlert('aiAlert');
+
+    try {
+      const res  = await fetch(`/api/ai/${kind}/${encodeURIComponent(selectedId)}`, { method: 'POST' });
+      const data = await res.json();
+      resultDiv.classList.remove('loading');
+      if (!res.ok) {
+        resultDiv.textContent = '';
+        showAlert('aiAlert', 'error', data.error || 'AI request failed.');
+        return;
+      }
+      resultDiv.textContent = data.result;
+    } catch (err) {
+      resultDiv.classList.remove('loading');
+      resultDiv.textContent = '';
+      showAlert('aiAlert', 'error', 'Could not reach the server. Make sure Flask is running.');
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     HELPERS
+  ══════════════════════════════════════════════════════════════ */
+  function getFormPayload() {
+    const id      = document.getElementById('studentId').value.trim();
+    const name    = document.getElementById('studentName').value.trim();
+    const cls     = document.getElementById('studentClass').value.trim();
+    const subjects= document.getElementById('subjects').value.trim();
+    const marks   = document.getElementById('marks').value.trim();
+
+    if (!id || !name || !cls || !subjects || !marks) {
+      showAlert('formAlert', 'error', 'All fields are required.');
+      return null;
+    }
+    return { id, name, 'class': cls, subjects, marks };
+  }
+
+  function clearForm() {
+    ['studentId','studentName','studentClass','subjects','marks'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    selectedId = null;
+    document.querySelectorAll('#tableBody tr').forEach(tr => tr.classList.remove('selected'));
+    hideAlert('formAlert');
+  }
+
+  function showAlert(elementId, type, message) {
+    const el = document.getElementById(elementId);
+    el.className = `alert alert-${type} show`;
+    el.textContent = message;
+    if (type === 'success') setTimeout(() => hideAlert(elementId), 4000);
+  }
+
+  function hideAlert(elementId) {
+    const el = document.getElementById(elementId);
+    el.classList.remove('show');
+  }
+
+  // Close modal on overlay click
+  document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+
+</body>
+</html>
